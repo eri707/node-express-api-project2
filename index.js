@@ -1,9 +1,9 @@
 // install modules
 const express = require('express');
 const app = express();
-app.use(express.json());
 const fs = require('fs');
-
+// midlleware reqires to parse incoming json 
+app.use(express.json());
 // helper function to generate id for each record
 const generalId = () => {
     let resultString = '';
@@ -19,13 +19,31 @@ app.post('/', function (req, res) {
     // add id to the object of req.body
     req.body.id = generalId();
     // create json data from req.body
-    let animal = JSON.stringify(req.body);
+    let data = JSON.stringify(req.body);
     // create the json file
-    fs.writeFile('animal.json', animal, (err) => {
-        if(err) throw err;
+    fs.writeFile(`data/${req.body.id}.json`, data, (err) => {
+        if (err) throw err;
         res.send(req.body);
     });
 });
+// read a list of animals
+app.get('/', function (req, res) {
+    fs.readdir('data/', (err, files) => {
+        if (err) throw err;
+        let animals = [];
+        files.forEach(file => {
+            let animal = JSON.parse(fs.readFileSync(`data/${file}`));
+            animals.push(animal);
+        });
+        res.send(animals);
+    });
+});
+// read a single of animals
+app.get('/:animalId', function (req, res) {
+    let animal = JSON.parse(fs.readFileSync(`data/${req.params.animalId}.json`));
+    res.send(animal);
+});
+
 // access to the server
 app.listen(3000);
 
